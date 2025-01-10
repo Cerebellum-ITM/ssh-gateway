@@ -6,3 +6,13 @@ export interface SSHConnection {
   port?: string;
   identityFile?: string;
 }
+
+export interface Preferences {
+  openIn: string;
+}
+
+export enum ShellOption {
+  Bash = "bash",
+  Zsh = "zsh",
+  Fish = "fish",
+}

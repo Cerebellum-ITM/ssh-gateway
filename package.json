@@ -27,6 +27,24 @@
         }
       ],
       "default": "~/.ssh/config"
+    },
+    {
+      "name": "openIn",
+      "type": "dropdown",
+      "required": false,
+      "title": "Decide how to open our SSH-Connection",
+      "description": "Choose wether to open in new Window or new Tab",
+      "data": [
+        {
+          "title": "New Window",
+          "value": "newWindow"
+        },
+        {
+          "title": "New Tab",
+          "value": "newTab"
+        }
+      ],
+      "default": "newWindow"
     }
   ],
   "commands": [

@@ -1,12 +1,24 @@
-import { ActionPanel, Detail, List, Action, Icon } from "@raycast/api";
+import { getPreferenceValues, ActionPanel, List, Action, showHUD, Icon } from "@raycast/api";
 import { getConnections } from "./utils/storage.api";
-import { SSHConnection } from "./types";
+import { SSHConnection, ShellOption, Preferences } from "./types";
 import { useEffect, useState } from "react";
+import { runAppleScript } from "@raycast/utils";
+import { getGhosttyScript } from "./scripts/ghosttyScript"
+
+const preferences = getPreferenceValues<Preferences>();
+export const openIn = preferences["openIn"];
 
 export default function Command() {
+  const [shellType, setShellType] = useState<ShellOption | null>(null);
   const [connectionsList, setConnectionsList] = useState<SSHConnection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const shellOptions = {
+    bash: "Bash",
+    zsh: "Zsh",
+    fish: "Fish",
+  };
 
   useEffect(() => {
     const fetchConnections = async () => {
@@ -32,17 +44,27 @@ export default function Command() {
   }
 
   return (
-    <List isLoading={isLoading}>
+    <List isLoading={isLoading} searchBarAccessory={
+      <List.Dropdown 
+        tooltip="Select shell type" 
+        storeValue
+        defaultValue={ShellOption.Bash}
+        onChange={(newValue) => setShellType(newValue as ShellOption)}
+      >
+        {Object.entries(shellOptions).map(([value, name]) => (
+            <List.Dropdown.Item key={value} title={name} value={value}/>
+          ))}
+      </List.Dropdown>
+    }>
       {connectionsList.map((connection) => (
-        <ConnectionListItem key={connection.id} connection={connection} />
+        <ConnectionListItem key={connection.id} connection={connection} shell={shellType}/>
       ))}
     </List>
   );
 }
 
-function ConnectionListItem(props: { connection: SSHConnection }) {
-  const { connection } = props;
-  console.log(connection)
+function ConnectionListItem(props: { connection: SSHConnection, shell: ShellOption | null }) {
+  const { connection, shell } = props;
   return (
     <List.Item
       icon={Icon.ComputerChip}
@@ -50,9 +72,22 @@ function ConnectionListItem(props: { connection: SSHConnection }) {
       subtitle={connection.address}
       actions={
         <ActionPanel>
-          <Action.Push title="Show Details" target={<Detail markdown={`# ${connection.name}\n\n**Address:** ${connection.address}\n\n**User:** ${connection.user || "N/A"}\n\n**Port:** ${connection.port || "N/A"}\n\n${connection.identityFile || "N/A"}`}/>}/>
+          <Action title="Connect to item" onAction={() => handleSelectConnection(connection, shell)}/>
         </ActionPanel>
       }
     />
   );
 }
+
+const handleSelectConnection = async (connection: SSHConnection, shell: ShellOption | null) => {
+  const command = `ssh ${connection.name} -t ${shell}`
+  const finalScript = getGhosttyScript(openIn, command);
+  try {
+      await runAppleScript(finalScript);
+      showHUD(`The server ${connection.name} was successfully configured`);
+  } catch (error) {
+      await runAppleScript(finalScript);
+      showHUD(`Failed to connect to ${connection.name}: ${error}`);
+      console.log(error);
+  }
+};
