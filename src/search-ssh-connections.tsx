@@ -73,6 +73,7 @@ function ConnectionListItem(props: { connection: SSHConnection, shell: ShellOpti
       actions={
         <ActionPanel>
           <Action title="Connect to item" onAction={() => handleSelectConnection(connection, shell)}/>
+          <Action title="Configure Ghostty terminal in the item" onAction={() => configureGhosttyTerminalInSelectConnection(connection)}/>
         </ActionPanel>
       }
     />
@@ -81,6 +82,19 @@ function ConnectionListItem(props: { connection: SSHConnection, shell: ShellOpti
 
 const handleSelectConnection = async (connection: SSHConnection, shell: ShellOption | null) => {
   const command = `ssh ${connection.name} -t ${shell}`
+  const finalScript = getGhosttyScript(openIn, command);
+  try {
+      await runAppleScript(finalScript);
+      showHUD(`The server ${connection.name} was successfully configured`);
+  } catch (error) {
+      await runAppleScript(finalScript);
+      showHUD(`Failed to connect to ${connection.name}: ${error}`);
+      console.log(error);
+  }
+};
+
+const configureGhosttyTerminalInSelectConnection = async (connection: SSHConnection) => {
+  const command = `infocmp -x | ssh ${connection.name} -- tic -x -`;
   const finalScript = getGhosttyScript(openIn, command);
   try {
       await runAppleScript(finalScript);
