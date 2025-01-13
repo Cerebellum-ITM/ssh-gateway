@@ -74,6 +74,7 @@ function ConnectionListItem(props: { connection: SSHConnection, shell: ShellOpti
         <ActionPanel>
           <Action title="Connect to item" onAction={() => handleSelectConnection(connection, shell)}/>
           <Action title="Configure Ghostty terminal in the item" onAction={() => configureGhosttyTerminalInSelectConnection(connection)}/>
+          <Action.CopyToClipboard content={connection.address} title="Get the address" shortcut={{ modifiers: ["cmd"], key: "." }}/>
         </ActionPanel>
       }
     />
