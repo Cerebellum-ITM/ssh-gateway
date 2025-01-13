@@ -52,7 +52,7 @@ export function getGhosttyScript(openIn: string, command: string): string {
         tell application "System Events"
             -- Ensure Ghostty is active before sending text
             tell application "Ghostty" to activate
-            delay 0.1 -- Small delay to ensure Ghostty is ready
+            delay 0.2 -- Small delay to ensure Ghostty is ready
             
             -- Check if Ghostty is frontmost
             set frontApp to name of first application process whose frontmost is true

@@ -1,4 +1,4 @@
-import { getPreferenceValues, ActionPanel, List, Action, showHUD, Icon } from "@raycast/api";
+import { getPreferenceValues, ActionPanel, List, Action, showHUD, Icon, closeMainWindow } from "@raycast/api";
 import { getConnections } from "./utils/storage.api";
 import { SSHConnection, ShellOption, Preferences } from "./types";
 import { useEffect, useState } from "react";
@@ -84,10 +84,10 @@ const handleSelectConnection = async (connection: SSHConnection, shell: ShellOpt
   const command = `ssh ${connection.name} -t ${shell}`
   const finalScript = getGhosttyScript(openIn, command);
   try {
+      await closeMainWindow();
       await runAppleScript(finalScript);
       showHUD(`The server ${connection.name} was successfully configured`);
   } catch (error) {
-      await runAppleScript(finalScript);
       showHUD(`Failed to connect to ${connection.name}: ${error}`);
       console.log(error);
   }
@@ -97,10 +97,10 @@ const configureGhosttyTerminalInSelectConnection = async (connection: SSHConnect
   const command = `infocmp -x | ssh ${connection.name} -- tic -x -`;
   const finalScript = getGhosttyScript(openIn, command);
   try {
+      await closeMainWindow();
       await runAppleScript(finalScript);
       showHUD(`The server ${connection.name} was successfully configured`);
   } catch (error) {
-      await runAppleScript(finalScript);
       showHUD(`Failed to connect to ${connection.name}: ${error}`);
       console.log(error);
   }
