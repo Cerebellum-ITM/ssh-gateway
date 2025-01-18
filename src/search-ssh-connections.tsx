@@ -1,4 +1,4 @@
-import { getPreferenceValues, ActionPanel, List, Action, showHUD, Icon, closeMainWindow } from "@raycast/api";
+import { getPreferenceValues, ActionPanel, List, Action, showHUD, Icon, closeMainWindow, Form } from "@raycast/api";
 import { getConnections } from "./utils/storage.api";
 import { SSHConnection, ShellOption, Preferences } from "./types";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ export default function Command() {
   const [connectionsList, setConnectionsList] = useState<SSHConnection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const [port, setPort] = useState("");
   const shellOptions = {
     bash: "Bash",
     zsh: "Zsh",
@@ -72,14 +72,34 @@ function ConnectionListItem(props: { connection: SSHConnection, shell: ShellOpti
       subtitle={connection.address}
       actions={
         <ActionPanel>
-          <Action title="Connect to item" onAction={() => handleSelectConnection(connection, shell)}/>
-          <Action title="Configure Ghostty terminal in the item" onAction={() => configureGhosttyTerminalInSelectConnection(connection)}/>
-          <Action.CopyToClipboard content={connection.address} title="Get the address" shortcut={{ modifiers: ["cmd"], key: "." }}/>
+          <Action title="Connect to item" onAction={() => handleSelectConnection(connection, shell)} icon={ Icon.Terminal } />
+          <Action.Push title="Open a service in the server" target={ <RequestPortForm serverAddress = { connection.address } /> } icon={ Icon.Window } />
+          <Action.CopyToClipboard content={connection.address} title="Get the address" shortcut={{ modifiers: ["cmd"], key: "." }} />
+          <Action title="Configure Ghostty terminal in the item" onAction={() => configureGhosttyTerminalInSelectConnection(connection)} icon={ Icon.Hammer } />
         </ActionPanel>
       }
     />
   );
 }
+
+function RequestPortForm( props: { serverAddress: string } ) {
+  const { serverAddress } = props;
+  const [inputPortValue, setPortValue] = useState("");
+
+  return (
+    <Form
+      actions={
+        <ActionPanel>
+          <Action.OpenWith path = { `http://${serverAddress}:${inputPortValue}` } icon={ Icon.Globe } />
+          <Action.CreateQuicklink quicklink={{ link: `http://${serverAddress}:${inputPortValue}` }} title="Create a Quick Link" />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField id="input" title="Which port do you want to connect to?" placeholder="Port" onChange={setPortValue} />
+    </Form>
+  );
+}
+
 
 const handleSelectConnection = async (connection: SSHConnection, shell: ShellOption | null) => {
   const command = `ssh ${connection.name} -t ${shell}`
